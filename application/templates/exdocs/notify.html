@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block content %}
+<h1>{{ date }}</h1>
+<div>
+    {% if file_list %}
+        <ol>
+        {% for fn in file_list %}
+            <li>{{ fn.name }}</li>
+        {% endfor %}
+        </ol>
+    {% else %}
+        <p>No such folder, or folder is empty</p>
+    {% endif %}
+</div>
+{% endblock %}

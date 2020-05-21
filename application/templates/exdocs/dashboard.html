@@ -1,0 +1,25 @@
+{%  extends "layout.html" %}
+{% block content %}
+<h1>Applications in {{ folder }}</h1>
+<p>Number of emails in <b>{{ folder }}</b> folder: {{ messages | length }}</p>
+<div>
+    <table class="table">
+        <thead>
+            <th scope="col">Date and Time</th>
+            <th scope="col">USN</th>
+            <th scope="col">Email</th>
+            <th scope="col">Attachments</th>
+        </thead>
+        <tbody>
+            {% for msg in messages %}
+                <tr>
+                    <td>{{ msg.date }}</td>
+                    <td>{{ msg.subject }}</td>
+                    <td>{{msg.from_}}</td>
+                    <td>{{msg.attachments | count}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock%}
