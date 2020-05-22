@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+
+<p>{{ message_list | count }} messages</p><hr>
+<div>
+    {% for msg in message_list %}
+        <p>From: {{ msg['header']['email_from'] }}</p>
+        <p>Date: {{ msg['header']['date'] }} {{ msg['header']['time'] }}</p>
+        <p>Subject: {{ msg['header']['subject'] }}</p>
+        <pre>{{ msg['body'] }}</pre>
+        <hr>
+    {% endfor %}
+</div>
+{% endblock %}

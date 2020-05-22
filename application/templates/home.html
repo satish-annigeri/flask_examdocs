@@ -6,9 +6,9 @@
         <div class="card mb-4 shadow-sm">
             <h5 class="card-header">Exam Section Documents</h5>
             <div class="btn-group-vertical" role="group" aria-label="Basic example">
-                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard')}}';">Inbox <span class="badge badge-secondary">{{ dashboard['inbox_folder'] }}</span></button>
-                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='printed')}}';">Printed <span class="badge badge-secondary">{{ dashboard['printed_folder'] }}</span></button>
-                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='error')}}';">Error <span class="badge badge-secondary">{{ dashboard['error_folder'] }}</span></button>
+                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard')}}';">Inbox <span class="badge badge-secondary float-right">{{ dashboard['inbox_folder'] }}</span></button>
+                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='printed')}}';">Printed <span class="badge badge-secondary float-right">{{ dashboard['printed_folder'] }}</span></button>
+                <button type="button" class="btn btn-light text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='error')}}';">Error <span class="badge badge-secondary float-right">{{ dashboard['error_folder'] }}</span></button>
             </div>
             <div class="card-footer">Exam Section</div>
         </div>
@@ -17,9 +17,9 @@
                 Exam Section Documents
             </div>
             <div class="btn-group-vertical" role="group" aria-label="Basic example">
-                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard')}}';">Inbox <span class="badge badge-light">{{ dashboard['inbox_folder'] }}</span></button>
-                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='printed')}}';">Printed <span class="badge badge-light">{{ dashboard['printed_folder'] }}</span></button>
-                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='error')}}';">Error <span class="badge badge-light">{{ dashboard['error_folder'] }}</span></button>
+                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard')}}';">Inbox <span class="badge badge-light float-right">{{ dashboard['inbox_folder'] }}</span></button>
+                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='printed')}}';">Printed <span class="badge badge-light float-right">{{ dashboard['printed_folder'] }}</span></button>
+                <button type="button" class="btn btn-secondary text-left" onclick="window.location.href='{{url_for('exdocs_bp.dashboard', folder='error')}}';">Error <span class="badge badge-light float-right">{{ dashboard['error_folder'] }}</span></button>
             </div>
         </div>
         <div class="card mb-4 shadow-sm">

@@ -33,3 +33,16 @@ def notify(date='2020-05-11'):
     else:
         return render_template('exdocs/notify.html', date=date, file_list=None)
 
+@exdocs_bp.route('/pull')
+@exdocs_bp.route('/pull/<string:folder>')
+@login_required
+def pull_messages(folder='INBOX'):
+    imap = IMAP_Server(host, user, password)
+    msg_ids = imap.get_msg_ids(folder)
+    message_list = []
+    for msg_id in msg_ids:
+        message = imap.get_message(folder, msg_id)
+        message_list.append(message)
+    return render_template('exdocs/message_list.html', title="Message List", message_list=message_list)
+
+

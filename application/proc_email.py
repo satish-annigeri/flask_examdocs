@@ -120,11 +120,11 @@ class IMAP_Server:
         date_str = msg.get('Date')
         date, time = get_date_time(date_str)
         body = get_text(msg)
-        body = body.decode().replace('\r', '').splitlines()
-        body = [ln for ln in body if len(ln.strip()) > 0]
-        email_msg = {'email_from': msg.get('From'), 'date': date, 'time': time, 'subject': msg.get('Subject'), 'body': body}
+        # body = body.decode().replace('\r', '').splitlines()
+        # body = [ln for ln in body if len(ln.strip()) > 0]
+        # email_msg = {'email_from': msg.get('From'), 'date': date, 'time': time, 'subject': msg.get('Subject'), 'body': body}
         # self.logout()
-        return email_msg
+        return body.decode()
 
     def get_attachment_fnames(self, folder, msg_id):
         # self.login(folder)
