@@ -5,18 +5,20 @@
 <div>
     <table class="table">
         <thead>
-            <th scope="col">Date and Time</th>
-            <th scope="col">USN</th>
             <th scope="col">Email</th>
+            <th scope="col">Date and Time</th>
+            <th scope="col">Time</th>
+            <th scope="col">Subject</th>
             <th scope="col">Attachments</th>
         </thead>
         <tbody>
             {% for msg in messages %}
                 <tr>
-                    <td>{{ msg.date }}</td>
-                    <td>{{ msg.subject }}</td>
-                    <td>{{msg.from_}}</td>
-                    <td>{{msg.attachments | count}}</td>
+                    <td>{{ msg['email_from'] }}</td>
+                    <td>{{ msg['date'] }}</td>
+                    <td>{{ msg['time'] }}</td>
+                    <td>{{ msg['subject'] }}</td>
+                    <td>{{ msg['attachment_fnames'] | count }}</td>
                 </tr>
             {% endfor %}
         </tbody>

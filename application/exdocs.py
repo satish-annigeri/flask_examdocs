@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import current_user, login_required, logout_user
 from .process_emails import *
-# from .proc_email import *
+from .proc_email import *
 
 
 host = 'mail.vtu.ac.in'
@@ -18,9 +18,9 @@ exdocs_bp = Blueprint('exdocs_bp', __name__, template_folder='templates', static
 @exdocs_bp.route('/dashboard/<string:folder>')
 @login_required
 def dashboard(folder='INBOX'):
-    # imap = IMAP_Server(host, user, passwd)
-    # messages = imap.get_msg_headers(folder)
-    messages = get_messages(host, user, password, folder)
+    imap = IMAP_Server(host, user, passwd)
+    messages = imap.get_headers(folder)
+    # messages = get_messages(host, user, password, folder)
     return render_template('exdocs/dashboard.html', folder=folder, messages=messages)
 
 @exdocs_bp.route('/notify/<string:date>')
