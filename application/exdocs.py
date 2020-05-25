@@ -2,7 +2,7 @@ from pathlib import Path
 
 from flask import Blueprint, render_template, redirect, url_for
 from flask_login import current_user, login_required, logout_user
-from .process_emails import *
+# from .process_emails import *
 from .proc_email import *
 
 
@@ -14,6 +14,15 @@ password = 'examdocs@2020'
 # Blueprint configuration
 exdocs_bp = Blueprint('exdocs_bp', __name__, template_folder='templates', static_folder='static')
 
+# def get_num_messages(folder_list):
+#     mb = IMAP_Server(host, user, passwd)
+#     mb.login()
+#     num_messages = []
+#     for folder in folder_list:
+#         n = mb.select(folder)
+#         num_messages.append((folder, n))
+#     return num_messages
+
 @exdocs_bp.route('/dashboard')
 @exdocs_bp.route('/dashboard/<string:folder>')
 @login_required
@@ -24,8 +33,8 @@ def dashboard(folder='INBOX'):
     return render_template('exdocs/dashboard.html', folder=folder, messages=messages)
 
 @exdocs_bp.route('/notify/<string:date>')
-def notify(date='2020-05-11'):
-    folder = '/mnt/c/Users/satish/Documents/WES'
+def notify(date='2020-05-22'):
+    folder = '/mnt/c/Users/satish/Documents/ElectronicDispatch/WES'
     path = Path(folder) / date
     if path.is_dir():
         file_list = path.glob('*.pdf')

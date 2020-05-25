@@ -4,21 +4,12 @@ from email.parser import HeaderParser, BytesParser, Parser
 import datetime as dt
 import re
 
-
-def get_date_time(date_str):
-    try:
-        ts = dt.datetime.strptime(date_str[:31], '%a, %d %B %Y %H:%M:%S %z').timestamp()
-    except:
-        print('Error: converting to date and time')
-    date = dt.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
-    time = dt.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
-    return date, time
-
-
+### Regular expressions ###
 re_usn = r'[1-9][A-Z]{2}[0-9]{2}[A-Z]{2,3}[0-9]{2,3}'
 re_payment_id = r'DU[A-Z][0-9]{7}'
 re_amount = r'[0-9]+[.-]*[0-9]*'
 re_phone = r'[+]*[0-9]{0,2}[0-9]{10}'
+re_email = r'<\S+@\S+\.\S+>'
 
 def get_usn(ln):
     s = re.search(re_usn, ln, re.I)
@@ -30,11 +21,123 @@ def get_usn(ln):
         usn = ln + ' - Incorrect UG/PG USN'
     return usn
 
+
+def get_date_time(date_str):
+    try:
+        ts = dt.datetime.strptime(date_str[:31], '%a, %d %B %Y %H:%M:%S %z').timestamp()
+    except:
+        print('Error: converting to date and time')
+        return None, None
+    date = dt.datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
+    time = dt.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+    return date, time
+
+
+def get_name_email(header_email):
+    s = re.search(re_email, header_email)
+    if s:
+        sender_name = header_email[:s.start()].strip()
+        sender_email = header_email[s.start()+1:s.end()-1]
+        return sender_name, sender_email
+    else:
+        return None, None
+
 def get_text(msg):
     if msg.is_multipart():
         return get_text(msg.get_payload(0))
     else:
         return msg.get_payload(None, True)
+
+### IMAP4 Functions ###
+
+host = 'mail.vtu.ac.in'
+user = 'examdocs@vtu.ac.in'
+passwd = 'examdocs@2020'
+
+def imap_login(host, user, passwd):
+    try:
+        imap = IMAP4_SSL(host)
+        typ, data = imap.login(user, passwd)
+        if typ == 'OK':
+            return imap
+        else:
+            return None
+    except:
+        return None
+
+def get_mbox_list(host, user, passwd):
+    if (imap := imap_login(host, user, passwd)):
+        typ, mbox_list = imap.list()
+        if typ == 'OK':
+            return mbox_list
+        else:
+            return None
+    else:
+        return None
+
+def get_num_messages(mbox_list):
+    if (imap := imap_login(host, user, passwd)):
+        num_messages = []
+        for mbox in mbox_list:
+            # print(f'Mailbox: {mbox}, Messages: ', end='')
+            typ, data = imap.select(mbox, True)
+            if typ == 'OK':
+                n = int(data[0].decode())
+                # print(n)
+                num_messages.append((mbox, n))
+        imap.close()
+        imap.logout()
+        return num_messages
+    else:
+        return None
+
+def get_msgids(host, user, passwd, mbox, q='ALL'):
+    if (imap := imap_login(host, user, passwd)):
+        typ, data = imap.select(mbox, True)
+        if typ == 'OK':
+            typ, data = imap.search(None, f'({q})')
+            if typ == 'OK':
+                return data[0].split()
+        imap.close()
+        imap.logout()
+        return None
+    else:
+        return None
+
+def get_msg_header(host, user, passwd, mbox):
+    if (imap := imap_login(host, user, passwd)):
+        imap.select(mbox, True)
+        typ, data = imap.fetch(msg_id, '(RFC822)')
+        if typ == 'OK':
+            from email.parser import BytesParser
+
+            parser = HeaderParser()
+            msg = parser.parsebytes(data[0][1])
+            email_from = msg.get('From')
+            date_str = msg.get('Date')
+            date, time = get_date_time(date_str)
+            subject = msg.get('Subject')
+            att_fnames = get_attachment_fnames(folder, msg_id)
+            header_data = {'email_from': email_from, 'date': date, 'time': time, 'subject': subject, 'attachment_fnames': att_fnames}
+            return header_data
+
+def get_msg(host, user, passwd, mbox, msg_id):
+    if (imap := imap_login(host, user, passwd)):
+        typ, data = imap.select(mbox, True)
+        if typ == 'OK':
+            typ, data = imap.fetch(msg_id, '(RFC822)')
+            if typ == 'OK':
+                from email.parser import BytesParser
+                parser = BytesParser()
+                raw_msg = data[0][1]
+                msg = parser.parsebytes(raw_msg)
+                sender, sender_email = get_name_email(msg.get('From'))
+                date, time = get_date_time(msg.get('Date'))
+                imap.close()
+                imap.logout()
+                return mbox, sender, sender_email, date, time, raw_msg
+        imap.close()
+        imap.logout()
 
 # =========== IMAP4 Server class ===========
 
@@ -57,7 +160,7 @@ class IMAP_Server:
             self.imap = IMAP4_SSL(self.host)
             self.imap.login(user, passwd)
             if folder:
-                self.select(folder)
+                self.select(folder, True)
         except Exception as e:
             self.imap = None
 
@@ -69,9 +172,10 @@ class IMAP_Server:
         self.imap = None
 
     def select(self, folder='INBOX'):
-        res, data = self.imap.select(folder)
+        res, data = self.imap.select(folder, True)
         if res == 'OK':
             self.current_folder = folder
+            return int(data[0].decode())
         else:
             self.current_folder = None
 
@@ -93,7 +197,7 @@ class IMAP_Server:
 
     def get_msg_header(self, folder, msg_id):
         self.login()
-        self.select(folder)
+        self.select(folder, True)
         res, data = self.imap.fetch(msg_id, '(BODY[HEADER.FIELDS (FROM DATE SUBJECT)])')
         if res == 'OK':
             header = data[0][1].decode()
@@ -113,7 +217,7 @@ class IMAP_Server:
     def get_msg_body(self, folder, msg_id):
         print(f'Message ID: {msg_id}')
         self.login()
-        self.select(folder)
+        self.select(folder, True)
         _, data = self.imap.fetch(msg_id, '(RFC822)')
         parser = BytesParser()
         msg = parser.parsebytes(data[0][1])
@@ -147,7 +251,7 @@ class IMAP_Server:
 
     def get_message(self, folder, msg_id):
         self.login()
-        self.select(folder)
+        self.select(folder, True)
         header = self.get_msg_header(folder, msg_id)
         body = self.get_msg_body(folder, msg_id)
         self.logout()
@@ -156,7 +260,7 @@ class IMAP_Server:
     def get_headers(self, folder='INBOX'):
         msg_ids = self.get_msg_ids(folder)
         self.login(folder)
-        self.select(folder)
+        self.select(folder, True)
 
         message_headers = []
         for msg_id in msg_ids:
@@ -170,24 +274,30 @@ class IMAP_Server:
         return message_headers
 
 
-host = 'mail.vtu.ac.in'
-user = 'examdocs@vtu.ac.in'
-passwd = 'examdocs@2020'
-
-
 if __name__ == '__main__':
-    imap = IMAP_Server(host, user, passwd)
-    print(imap)
-    print(imap, type(imap.folders))
-    for folder in imap.folders:
-        print(folder)
+    mbox_list = get_mbox_list(host, user, passwd)
+    for mbox in mbox_list:
+        print(mbox)
+    msg_ids = get_msgids(host, user, passwd, 'Inbox')
+    print(f'{len(msg_ids)} messages in Inbox')
+    num_messages = get_num_messages(host, user, passwd, ['Inbox', 'printed', 'error'])
+    for n in num_messages:
+        print(n[0], n[1])
+    # for msg_id in msg_ids:
+    #     _, _, sender_email, date, time, _ = get_msg(host, user, passwd, 'Inbox', msg_id)
+    #     print(sender_email, date, time)
+    # imap = IMAP_Server(host, user, passwd)
+    # print(imap)
+    # print(imap, type(imap.folders))
+    # for folder in imap.folders:
+    #     print(folder)
     
-    folder = 'INBOX'
-    msg_ids = imap.get_msg_ids(folder)
-    print(f'Messages in {folder} folder: {len(msg_ids)}')
-    msg = imap.get_message(folder, msg_ids[0])
-    print(msg['header'])
-    print(msg['body'])
+    # folder = 'INBOX'
+    # msg_ids = imap.get_msg_ids(folder)
+    # print(f'Messages in {folder} folder: {len(msg_ids)}')
+    # msg = imap.get_message(folder, msg_ids[0])
+    # print(msg['header'])
+    # print(msg['body'])
     # for msg_id in msg_ids:
     #     header = imap.get_msg_header(folder, msg_id)
     #     print(f'Message ID: {msg_id}', end=' ')

@@ -9,9 +9,10 @@ main_bp = Blueprint('main_bp', __name__, template_folder='templates', static_fol
 
 @main_bp.route('/')
 def home():
-    dashboard = {'inbox_folder': exdocs.get_num_messages('INBOX')}
-    dashboard['printed_folder'] = exdocs.get_num_messages('printed')
-    dashboard['error_folder'] = exdocs.get_num_messages('error')
+    num_messages = exdocs.get_num_messages(['INBOX', 'printed', 'error'])
+    dashboard = {'inbox_folder': num_messages[0][1]}
+    dashboard['printed_folder'] = num_messages[1][1]
+    dashboard['error_folder'] = num_messages[2][1]
     return render_template('home.html', title='Welcome', dashboard=dashboard)
 
 
